@@ -28,7 +28,7 @@ train_datasets:
 
             rc_aug: true
             shift_aug: true
-            shift_aug_range: [-50, 50]
+            shift_aug_range: [-100, 100]
             filter_column: 'chr'
             filter_in_list: null
             filter_not_in_list: ['chr1', 'chrX', 'chrY', 'chrnan']
@@ -47,7 +47,7 @@ train_datasets:
 
             rc_aug: true
             shift_aug: true
-            shift_aug_range: [-50, 50]
+            shift_aug_range: [-100, 100]
             filter_column: 'chr'
             filter_in_list: null
             filter_not_in_list: ['chr1', 'chrX', 'chrY', 'chrnan']
@@ -188,7 +188,6 @@ model:
 #         linear_channels_list:   [1000,1000]
 #         linear_dropout_rate:    0.5
 
-
 multi_task_data_loader:
     type: MultiTaskDataLoader
     args:
@@ -229,7 +228,7 @@ metric_func_list:
 early_stopper:
     type: EarlyStopping
     args:
-        patience: 10
+        patience: 20
         delta: 0
         target: 'min'
         verbose: true
