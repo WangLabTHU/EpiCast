@@ -15,9 +15,9 @@ random_data_split: false
 train_dataset:
     type: SeqLabelDataset
     args: &train_dataset_args
-        seq_exp_path: '/home/hxcai/cell_type_specific_CRE/data/GosaiMPRA/GosaiMPRA_len200.csv'
+        seq_exp_path: '/home/hxcai/cell_type_specific_CRE/data/SirajMPRA/SirajMPRA_total.csv'
         input_column: 'seq'
-        output_column: ['K562']
+        output_column: ['A549']
         filter_column: 'chr'
         filter_in_list: ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22']
         filter_not_in_list: null
@@ -64,7 +64,7 @@ data_loader:
     type: DataLoader
     args:
         batch_size: *batch_size
-        num_workers: 16
+        num_workers: 4
         pin_memory: true
         drop_last: false
 
