@@ -12,16 +12,15 @@ batch_size: &batch_size 1024
 load_saved_model: false
 random_data_split: false
 
-train_cell_types: ['HepG2', 'K562']
-valid_cell_types: ['HepG2', 'K562', 'A549', 'HCT116']
+train_cell_types: ['HepG2']
+valid_cell_types: ['HepG2']
 
 train_dataset:
-    type: &type SeqFeatureExpDataset
+    type: &type SeqLabelDataset
     args: &args
-        data_path: '/home/hxcai/cell_type_specific_CRE/MPRA_exp/pretrained_based_models/data/Sei_Siraj_features_concat.csv'
+        data_path: '/home/hxcai/cell_type_specific_CRE/data/SirajMPRA/SirajMPRA_total.csv'
         seq_column: 'seq'
-        feature_column: ['DNase', 'H3K4me1', 'H3K4me3', 'H3K9me3', 'H3K27me3', 'H3K27ac', 'H3K36me3', 'CTCF']
-        exp_column: 'exp'
+        label_column: ['HepG2']
         filter_column: 'chr'
         filter_in_list: ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22']
         filter_not_in_list: null
@@ -38,16 +37,13 @@ total_dataset:
     args:
         <<: *args
         filter_column: null
-        filter_in_list: null
-        filter_not_in_list: null
 
 model:
-    type: MyBassetFeature
+    type: MyBasset
     args:
         input_length:           200
-        input_feature_dim:      8
         output_dim:             1
-        squeeze:                true
+        squeeze:                false
 
         conv_channels_list:     [256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256]
         conv_kernel_size_list:  [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
@@ -69,8 +65,8 @@ data_loader:
     type: DataLoader
     args:
         batch_size: *batch_size
-        num_workers: 1
-        pin_memory: true
+        num_workers: 0
+        pin_memory: false
         drop_last: false
 
 optimizer:
