@@ -1,18 +1,20 @@
-distribute: false #是否使用分布式训练
-seed: 0 #随机数种子
-save_dir: saved #保存路径
-num_epochs: 100 #训练的epoch数目
-num_log_steps: 10 #每多少个step输出log, 0 means no output
-num_valid_epochs: 1 #每多少个epoch运行valid
+train: True # 是训练还是测试
+distribute: False # 是否使用分布式训练
+gpu_ids: [0] # 训练使用的gpu id
+seed: 0 # 随机数种子
+save_dir: saved #保存的根路径
+num_epochs: 100 # 训练的epoch总数
+num_log_steps: 10 # 每多少个step输出log, 0 means no output
+num_valid_epochs: 1 # 每多少个epoch运行valid
 # num_save_epochs: 10
 # save_model: true
 scheduler_interval: step
-batch_size: &batch_size 1024
+batch_size: &batch_size 2048
 
 load_saved_model: false
 random_data_split: false
 
-train_cell_types: &train_cell_types ['HepG2']
+train_cell_types: &train_cell_types ['HepG2', 'K562', 'A549', 'HCT116']
 valid_cell_types: *train_cell_types
 
 train_dataset:
@@ -41,7 +43,7 @@ model:
     type: MyBasset
     args:
         input_length:           200
-        output_dim:             1
+        output_dim:             4
         squeeze:                false
 
         conv_channels_list:     [256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256]
@@ -64,14 +66,14 @@ data_loader:
     type: DataLoader
     args:
         batch_size: *batch_size
-        num_workers: 0
+        num_workers: 2
         pin_memory: false
         drop_last: false
 
 optimizer:
     type: Adam
     args:
-        lr: 3.0e-4
+        lr: 5.0e-4
         weight_decay: 1.0e-4
 
 lr_scheduler:

@@ -1,16 +1,14 @@
-distribute: false #是否使用分布式训练
-seed: 0 #随机数种子
-save_dir: saved #保存路径
-num_epochs: 100 #训练的epoch数目
-num_log_steps: 10 #每多少个step输出log, 0 means no output
-num_valid_epochs: 1 #每多少个epoch运行valid
-# num_save_epochs: 10
-# save_model: true
+train: True # 是训练还是测试
+distribute: False # 是否使用分布式训练
+gpu_ids: [2] # 训练使用的gpu id
+seed: 0 # 随机数种子
+save_dir: saved # 保存的根路径
+num_epochs: 400 # 训练的epoch总数
+num_log_steps: 10 # 每多少个step输出log, 0 means no output
+num_valid_epochs: 1 # 每多少个epoch运行valid
 scheduler_interval: step
 batch_size: &batch_size 1024
-
 load_saved_model: false
-random_data_split: false
 
 train_cell_types: &train_cell_types ['HepG2']
 valid_cell_types: *train_cell_types
@@ -64,7 +62,7 @@ data_loader:
     type: DataLoader
     args:
         batch_size: *batch_size
-        num_workers: 0
+        num_workers: 1
         pin_memory: false
         drop_last: false
 

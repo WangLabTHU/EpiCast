@@ -4,45 +4,51 @@ save_dir: saved #保存路径
 num_epochs: 100 #训练的epoch数目
 num_log_steps: 10 #每多少个step输出log, 0 means no output
 num_valid_epochs: 1 #每多少个epoch运行valid
-# num_save_epochs: 10
-# save_model: true
 scheduler_interval: step
-batch_size: &batch_size 1024
+batch_size: &batch_size 2048
 
-load_saved_model: false
-random_data_split: false
+# load_partial_saved_model: true
+# saved_model_path: '/home/hxcai/cell_type_specific_CRE/MPRA_exp/saved/0712_SirajMPRA_seq_4/0711_173327/checkpoints/checkpoint.pth'
 
-train_cell_types: &train_cell_types ['HepG2']
-valid_cell_types: *train_cell_types
+train_cell_types: &train_cell_types ['HepG2', 'K562', 'A549', 'HCT116']
+valid_cell_types: &valid_cell_types ['HepG2', 'K562', 'A549', 'HCT116']
 
 train_dataset:
-    type: &type SeqLabelDataset
+    type: &type SeqFeatureLabelDataset
     args: &args
-        data_path: '/home/hxcai/cell_type_specific_CRE/data/SirajMPRA/SirajMPRA_total.csv'
+        data_path: '/home/hxcai/cell_type_specific_CRE/MPRA_exp/pretrained_based_models/data/Sei_Siraj_features_concat.csv'
         seq_column: 'seq'
-        label_column: *train_cell_types
+        feature_column: ['DNase', 'H3K4me1', 'H3K4me3', 'H3K9me3', 'H3K27me3', 'H3K27ac', 'H3K36me3', 'CTCF']
+        # feature_column: []
+        label_column: 'exp'
+        cell_types: *train_cell_types
         apply_filter: true
         filter_column: 'chr'
         filter_in_list: ['chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22']
+        filter_not_in_list: null
 
 valid_dataset:
     type: *type
     args:
         <<: *args
+        cell_types: *valid_cell_types
         filter_in_list: ['chr1']
+        filter_not_in_list: null
 
-test_dataset:
+total_dataset:
     type: *type
     args:
         <<: *args
+        cell_types: *valid_cell_types
         apply_filter: false
 
 model:
-    type: MyBasset
+    type: MyBassetFeature
     args:
         input_length:           200
+        input_feature_dim:      8
         output_dim:             1
-        squeeze:                false
+        squeeze:                true
 
         conv_channels_list:     [256,256,256,256,256,256,256,256,256,256,256,256,256,256,256,256]
         conv_kernel_size_list:  [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
@@ -51,7 +57,7 @@ model:
         conv_dropout_rate:      0.2
         gap_layer:              false
 
-        linear_channels_list:   [1024, 1024]
+        linear_channels_list:   [256, 256]
         linear_dropout_rate:    0.5
         last_linear_layer:      true
         sigmoid:                false
@@ -63,8 +69,8 @@ model:
 data_loader:
     type: DataLoader
     args:
-        batch_size: *batch_size
-        num_workers: 0
+        batch_size: *batch_size 
+        num_workers: 1
         pin_memory: false
         drop_last: false
 
