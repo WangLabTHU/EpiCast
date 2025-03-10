@@ -1,6 +1,5 @@
 import os
 import sys
-import yaml
 import argparse
 import logging
 import numpy as np
@@ -12,7 +11,7 @@ from torch import nn
 from torch import distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
-import torch.utils.data
+from torch.utils.data import DataLoader
 import torchinfo
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -94,11 +93,11 @@ class Trainer:
         # setup model
         self.model = utils.init_obj(models, config['model'])
 
-        # if config.get('load_saved_model', False) == True:
-        #     saved_model_path = config['saved_model_path']
-        #     state_dict = torch.load(saved_model_path)
-        #     self.model.load_state_dict(state_dict)
-        #     self.log(f"load saved model from {saved_model_path}")
+        if config.get('load_saved_model', False) == True:
+            saved_model_path = config['saved_model_path']
+            state_dict = torch.load(saved_model_path)
+            self.model.load_state_dict(state_dict)
+            self.log(f"load saved model from {saved_model_path}")
 
 
         # if config.get('freeze_layers', False) == True:
@@ -279,7 +278,7 @@ class Trainer:
                 y_true_list_0 = y_true_list[:, i]
                 y_pred_list_0 = y_pred_list[:, i]
             else:
-                raise ValueError(f'y_true_list.shape = {y_true_list.shape}')
+                raise ValueError(f'wrong shape: y_true_list.shape = {y_true_list.shape}')
             
             for metric_func in self.metric_funcs:
                 metric_name = type(metric_func).__name__
@@ -287,24 +286,23 @@ class Trainer:
                 log_message += f', {metric_name} = {score:.6f}'
                 self.metric_df.loc[cell_type, metric_name] = score
             self.log(log_message)
+
         torch.set_grad_enabled(True)
+
+
 
 
     def test(self, test_loader):
         torch.set_grad_enabled(False)
-        # 代替with torch.no_grad()，避免多一层缩进，和train缩进一样，方便复制
-
-        y_pred_list = []
-
         self.model.eval()
-        for batch_idx, (input, label) in enumerate(tqdm(test_loader, disable=(self.local_rank != 0))):
-            input = to_device(input, self.device)
-            label = to_device(label, self.device)
-            out = self.model(input)
+        y_pred_list = []
+        for batch_idx, sample in enumerate(tqdm(test_loader, disable=(self.local_rank != 0))):
+            sample = to_device(sample, self.device)
+            out = self.model(sample)
             y_pred_list.append(out.detach())
 
         y_pred_list = torch.cat(y_pred_list).cpu().numpy()
-        save_file_path = self.config['save_file_path']
+        save_file_path = os.path.join(self.config['save_dir'], f'test_pred.npy')
         np.save(save_file_path, y_pred_list)
         torch.set_grad_enabled(True)
 
