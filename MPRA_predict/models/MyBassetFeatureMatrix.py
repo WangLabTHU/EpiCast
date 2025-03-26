@@ -1,12 +1,11 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchinfo
-
 from collections import OrderedDict
+from ruamel.yaml import YAML
+
 from .MyBasset import ConvBlock, LinearBlock
-from .Attention import CrossAttention
 
 
 class MyBassetFeatureMatrix(nn.Module):
@@ -19,13 +18,10 @@ class MyBassetFeatureMatrix(nn.Module):
             self, 
             input_seq_length=200,
             input_feature_dim=4,
-            num_cell_types=5,
             output_dim=1,
 
             sigmoid=False,
             squeeze=True,
-            rc_augmentation=False,
-            rc_region=None,
 
             conv_channels_list=None,
             conv_kernel_size_list=None,
@@ -37,19 +33,15 @@ class MyBassetFeatureMatrix(nn.Module):
 
             linear_channels_list=None,
             linear_dropout_rate=0.5,
-            last_linear_layer=True,
         ):                                
         super().__init__()
 
         self.input_seq_length   = input_seq_length
         self.input_feature_dim  = input_feature_dim
         self.output_dim         = output_dim
-        self.num_cell_types     = num_cell_types
 
         self.sigmoid            = sigmoid
         self.squeeze            = squeeze
-        self.rc_augmentation    = rc_augmentation
-        self.rc_region          = rc_region
 
         if conv_padding_list is None:
             conv_padding_list = [0] * len(conv_kernel_size_list)
@@ -78,12 +70,14 @@ class MyBassetFeatureMatrix(nn.Module):
         
         if global_average_pooling:
             self.conv_layers.add_module(
-                'gap_layer', nn.AdaptiveAvgPool1d(1))
+                f'gap_layer', nn.AdaptiveAvgPool1d(1))
 
+        # compute the shape
         with torch.no_grad():
-            test_input = torch.randn(1, 4, self.input_seq_length)
+            test_input = torch.zeros(1, 4, self.input_seq_length)
             test_output = self.conv_layers(test_input)
             hidden_dim = test_output[0].reshape(-1).shape[0]
+
         self.linear_layers = nn.Sequential(OrderedDict([]))
 
         for i in range(len(linear_channels_list)):
@@ -95,11 +89,10 @@ class MyBassetFeatureMatrix(nn.Module):
             self.linear_layers.add_module(
                 f'linear_dropout_{i}', nn.Dropout(p=linear_dropout_rate))
         
-        if last_linear_layer == True:
-            self.linear_layers.add_module(
-                f'linear_last', nn.Linear(
-                    in_features=hidden_dim if len(linear_channels_list) == 0 else linear_channels_list[-1], 
-                    out_features=output_dim))
+        self.linear_layers.add_module(
+            f'linear_last', nn.Linear(
+                in_features=hidden_dim if len(linear_channels_list) == 0 else linear_channels_list[-1], 
+                out_features=output_dim))
 
         self.sigmoid_layer = nn.Sigmoid()
 
@@ -114,11 +107,12 @@ class MyBassetFeatureMatrix(nn.Module):
         
         if seq.shape[2] == 4:
             seq = seq.permute(0, 2, 1)
+
         seq_embed = self.conv_layers(seq)
         seq_embed = seq_embed.view(seq_embed.size(0), -1)
 
         outputs = []
-        for i in range(self.num_cell_types):
+        for i in range(feature.shape[1]):
             feature_i = feature[:, i, :]  # Extract features for cell type i
             x = torch.cat([seq_embed, feature_i], dim=1)  # Concatenate sequence embedding with features
             x = self.linear_layers(x)
@@ -142,7 +136,6 @@ if __name__ == '__main__':
         args:
             input_seq_length:       200
             input_feature_dim:      4
-            num_cell_types:         5
             output_dim:             1
 
             conv_channels_list:     [256,256,256,256,256,256]
@@ -157,8 +150,8 @@ if __name__ == '__main__':
 
             sigmoid: False
     '''
-    
-    config = yaml.load(yaml_str, Loader=yaml.FullLoader)
+    yaml = YAML()
+    config = yaml.load(yaml_str)
     model = MyBassetFeatureMatrix(**config['model']['args'])
 
     seq = torch.randn(2, 4, 200)
