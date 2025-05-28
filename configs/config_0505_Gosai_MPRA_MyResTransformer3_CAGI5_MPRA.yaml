@@ -14,14 +14,13 @@ scheduler_interval: step
 batch_size: 4096
 load_saved_model: false
 
-total_cell_types: &total_cell_types [K562, HepG2, HEK293T, HeLa]
-cell_types: &cell_types [K562, HepG2, HEK293T, HeLa]
+cell_types: &cell_types [K562, HepG2, HEK293T]
 assays: &assays [DNase, H3K4me3, H3K27ac, CTCF]
 
 template_dataset:
   type: &type SeqFeatureMatrixDataset
   args: &args
-    data_path: ./data/CAGI5_MPRA/CAGI5_MPRA_Sei_feature_norm.csv
+    data_path: ./data/CAGI5_MPRA/CAGI5_MPRA_Sei_feature_0507.csv
     seq_column: seq
     # label_column: *cell_types
     cell_types: *cell_types
@@ -66,7 +65,6 @@ total_dataset:
   type: *type
   args:
     <<: *args
-    cell_types: *total_cell_types
 
 
 model:

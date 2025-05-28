@@ -3,7 +3,7 @@
 # world_size: 2 # gpu数量
 
 distributed: false # 是否使用分布式训练
-gpu_ids: [3] # 可用的gpu id
+gpu_ids: [2] # 可用的gpu id
 
 seed: 0 # 随机数种子
 save_dir: saved # 保存的根路径
@@ -20,7 +20,7 @@ assays: &assays [DNase, H3K4me3, H3K27ac, CTCF]
 template_dataset:
   type: &type SeqFeatureMatrixDataset
   args: &args
-    data_path: ./data/Gosai_MPRA/Gosai_MPRA_Sei_feature_0504_norm.csv
+    data_path: ./data/Gosai_MPRA/Gosai_MPRA_Sei_feature_0507.csv
     apply_filter: false
     seq_column: seq
     label_column: *cell_types

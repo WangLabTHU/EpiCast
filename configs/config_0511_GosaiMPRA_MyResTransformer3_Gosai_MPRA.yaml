@@ -14,22 +14,21 @@ scheduler_interval: step
 batch_size: 4096
 load_saved_model: false
 
-cell_types: &cell_types [K562, HepG2]
+cell_types: &cell_types [K562, HepG2, SK-N-SH, HCT116, A549]
 assays: &assays [DNase, H3K4me3, H3K27ac, CTCF]
 
 template_dataset:
   type: &type SeqFeatureMatrixDataset
   args: &args
-    data_path: ./data/Agarwal_MPRA/Agarwal_MPRA_Sei_feature_norm.csv
+    data_path: ./data/Gosai_MPRA/Gosai_MPRA_Sei_feature_0507.csv
     seq_column: seq
-    label_column: *cell_types
+    # label_column: *cell_types
     cell_types: *cell_types
     assays: *assays
-    apply_filter: false
-
-    crop: true
-    cropped_length: 200
+    crop: false
     padding: false
+
+    apply_filter: false
 
 train_dataset:
   type: *type
@@ -61,7 +60,6 @@ total_dataset:
   type: *type
   args:
     <<: *args
-    cell_types: [K562, HepG2]
 
 
 model:
@@ -103,7 +101,7 @@ optimizer:
     lr: 1.0e-3
     weight_decay: 1.0e-4
   transformer_args:
-    lr: 1.0e-4
+    lr: 3.0e-4
     weight_decay: 1.0e-4
 
 lr_scheduler:
