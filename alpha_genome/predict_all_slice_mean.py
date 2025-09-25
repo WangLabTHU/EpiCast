@@ -24,29 +24,11 @@ if __name__ == "__main__":
     api_key = 'AIzaSyCH8xp8n5siM8N7G7-qgR7Xy4q0ektB03s'
     dna_model = dna_client.create(api_key)
     
+    writer_1 = HDF5Writer(file_path="pred/Gosai_AlphaGenome_pred_DNase_chunked.h5", data_shape=(305,))
+    writer_2 = HDF5Writer(file_path="pred/Gosai_AlphaGenome_pred_Histone_chunked.h5", data_shape=(1116,))
+    writer_3 = HDF5Writer(file_path="pred/Gosai_AlphaGenome_pred_TF_chunked.h5", data_shape=(1617,))
 
-    writer_1 = HDF5Writer(file_path="Gosai_AlphaGenome_pred_DNase.h5", data_shape=(1, 305))
-    writer_2 = HDF5Writer(file_path="Gosai_AlphaGenome_pred_Histone.h5", data_shape=(1, 1116))
-    writer_3 = HDF5Writer(file_path="Gosai_AlphaGenome_pred_TF.h5", data_shape=(1, 1617))
-
-
-    
-
-    # writer = HDF5MultiWriter(
-    #     file_path="Gosai_AlphaGenome_pred.h5", 
-    #     chunk_size=256,
-    #     dtype="float32",
-    # )
-
-
-
-
-    # writer.create_dataset('RNA-seq', data_shape=(200, 667))
-    # writer.create_dataset('CAGE', data_shape=(200, 546))
-    # writer.create_dataset('DNase', data_shape=(1, 305))
-    # writer.create_dataset('ATAC', data_shape=(1, 167))
-    # writer.create_dataset('TF', data_shape=(1, 1617))
-    # writer.create_dataset('Histone', data_shape=(1, 1116))
+    print(writer_1.dset)
 
     batch_size = 256
     start = len(writer_1)
@@ -66,6 +48,7 @@ if __name__ == "__main__":
 
         pred = np.array([outputs[i].dnase.values for i in range(batch_len)])
         pred = pred[:, 924:1124, :].mean(1)
+        print(pred.shape)
         writer_1.append(pred)
 
         pred = np.array([outputs[i].chip_histone.values for i in range(batch_len)])
