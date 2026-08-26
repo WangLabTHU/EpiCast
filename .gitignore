@@ -1,0 +1,28 @@
+*.pyc
+__pycache__/
+*.egg-info/
+
+.vscode/
+.cursor/
+.history/
+
+# a leading underscore marks a file as work in progress, and keeps it out of git
+_*
+!__init__.py
+
+# notes stay local; the READMEs of this repository are added explicitly
+*.md
+!README.md
+
+# data, checkpoints and everything derived from them; see data/README.md
+data/**
+!data/README.md
+!data/*/
+!data/AlphaGenome/metadata.csv
+!data/Borzoi/targets_human.txt
+!data/Enformer/model_track_info.tsv
+!data/Sei/Sei_tracks_info.csv
+saved/
+outputs/
+results/
+figures/

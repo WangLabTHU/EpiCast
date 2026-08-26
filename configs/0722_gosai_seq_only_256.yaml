@@ -1,0 +1,166 @@
+seed: 0
+distributed: false
+device: cuda:2
+
+saved_root_dir: saved
+max_epochs: 1000
+epochs_per_val: 1
+load_saved_model: false
+
+train_cell_types: &train_cell_types [K562, HepG2, SK-N-SH]
+valid_cell_types: &valid_cell_types [HCT116, A549]
+total_cell_types: &total_cell_types [K562, HepG2, SK-N-SH, HCT116, A549]
+
+assays: &assays [DNase, H3K4me3, H3K27ac, CTCF]
+
+trainer:
+  type: Trainer
+
+train_dataset:
+  type: &type SeqDataset
+  args: &args
+    data_path: data/gosai_mpra/gosai_mpra_760679_zscore.tsv
+    seq_column: seq
+    target_column: *train_cell_types
+
+    apply_filter: true
+    filter_column: chr
+    filter_in_list: null
+    filter_not_in_list: [chr7, chr13, chr19, chr21, chrX]
+
+val_dataset:
+  type: *type
+  args:
+    <<: *args
+    filter_in_list: [chr19, chr21, chrX]
+    filter_not_in_list: null
+
+test_dataset:
+  type: *type
+  args:
+    <<: *args
+    filter_in_list: [chr7, chr13]
+    filter_not_in_list: null
+
+total_dataset:
+  type: *type
+  args:
+    <<: *args
+    cell_types: *total_cell_types
+    apply_filter: false
+
+train_loader:
+  type: DataLoader
+  args: &args2
+    batch_size: 4096
+    num_workers: 4
+    pin_memory: true
+    drop_last: false
+    shuffle: true
+
+val_loader:
+  type: DataLoader
+  args:
+    <<: *args2
+    shuffle: false
+
+model:
+  type: ConvNet
+  args:
+    input_seq_length:       200
+    input_seq_channels:     4
+    output_dim:             3
+
+    global_avg_pooling:     true
+    flatten:                true
+    output_activation:      null
+
+    num_conv_blocks:        6
+    conv_channels_list:     [256, 256, 256, 256, 256, 256]
+    conv_kernel_size_list:  [3, 3, 3, 3, 3, 3]
+    conv_stride_list:       [1, 1, 1, 1, 1, 1]
+    conv_padding_list:      [1, 1, 1, 1, 1, 1]
+    conv_dropout_rate:      0.2
+    conv_layer_order:       'resnet_v2'
+    conv_activation:        'relu'
+    pool_kernel_size_list:  [2, 2, 2, 2, 2, 2]
+
+    num_linear_blocks:      1
+    linear_channels_list:   [1024]
+    linear_dropout_rate:    0.5
+
+
+optimizer:
+  type: AdamW
+  args:
+    lr: 1.0e-3
+    weight_decay: 1.0e-4
+
+  param_groups:
+    - name: transformer
+      contains: [transformer., trans.]
+      args:
+        lr: 3.0e-4
+        weight_decay: 1.0e-4
+
+
+lr_scheduler:
+  type: WarmupCosineAnnealingWarmRestarts
+  args:
+    warmup_epochs: 10
+    T_0: 10
+    T_mult: 2
+
+loss_func:
+  type: MaskedMSELoss
+
+# metric_funcs:
+# - type: MaskedMSELoss
+# - type: Pearson
+# - type: Spearman
+
+early_stopper:
+  type: EarlyStopping
+  args:
+    monitor: Pearson
+    patience: 40
+    delta: 0
+    mode: max
+    verbose: true
+
+logger:
+  version: 1
+  disable_existing_loggers: false
+  formatters:
+    simple:
+      format: '%(message)s'
+    complex:
+      format: '%(asctime)s - %(levelname)s - %(message)s'
+  handlers:
+    console_handler:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: complex
+      stream: ext://sys.stdout
+    info_file_handler:
+      class: logging.handlers.RotatingFileHandler
+      level: INFO
+      formatter: complex
+      filename: info.log
+      maxBytes: 10485760
+      backupCount: 10
+      encoding: utf8
+    debug_file_handler:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: complex
+      filename: debug.log
+      maxBytes: 10485760
+      backupCount: 10
+      encoding: utf8
+  root:
+    level: DEBUG
+    handlers:
+    - console_handler
+    - info_file_handler
+    - debug_file_handler

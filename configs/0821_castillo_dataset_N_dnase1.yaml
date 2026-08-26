@@ -1,0 +1,15 @@
+# Castillo-Hair inference set for EpiCast-AlphaGenome variant B.
+# Same as 0728_castillo_dataset_N.yaml but pointing at the corrected VEF matrix.
+# The cell_types order is kept unchanged because it defines the column order of
+# the saved prediction npy (see analysis/12_eval_castillo_mpra.py).
+total_dataset:
+  type: &type SeqEpiDataset
+  args: &args
+    seq_file_path: data/castillo_mpra/castillo_mpra_data.tsv
+    epi_file_path: data/castillo_mpra/castillo_mpra_ag_vef_x10_log1p_dnase1.tsv
+    seq_column: seq
+    cell_types: &cell_types ['GM12878', 'SK-N-SH', 'WERI-Rb-1', 'HepG2', 'K562', 'MCF-7', 'HeLa-S3']
+    assays: &assays ['DNase', 'H3K4me3', 'H3K27ac', 'CTCF']
+    target_column: *cell_types
+    pad: true
+    padded_len: 200
